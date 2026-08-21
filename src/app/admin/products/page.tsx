@@ -4,6 +4,8 @@ import { Plus, Search, Tag, Eye, ShoppingBag, Euro, AlertCircle, Sparkles } from
 import ProductActions from "@/components/admin/ProductActions";
 import SignatureOrderControls from "@/components/admin/SignatureOrderControls";
 
+export const dynamic = "force-dynamic";
+
 export default async function AdminProductsPage() {
   const products = await prisma.product.findMany({
     orderBy: { createdAt: 'desc' },
