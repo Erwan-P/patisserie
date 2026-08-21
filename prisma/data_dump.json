@@ -1,0 +1,196 @@
+{
+  "users": [
+    {
+      "id": "cmsp5a6yn0000ms40ocebk49v",
+      "name": "Admin",
+      "email": "admin@gmail.com",
+      "emailVerified": null,
+      "image": null,
+      "role": "ADMIN",
+      "password": "$2b$10$3pmAw2SMJnRQRjdAWUVK/OnCxadItOT6OcQdk8SX7bfATPHj.Gec6",
+      "twoFactorHash": "$2b$10$xvzpoRG8i3WxcPAcJVW2PeVvnrNgrbIbyFK4hJowXrqEUQlvUil0K",
+      "createdAt": "2026-08-11T22:40:07.000Z"
+    },
+    {
+      "id": "cmsuhm5ut0000mskojy4wvg10",
+      "name": "Erwan Leboss",
+      "email": "eplanet2110@gmail.com",
+      "emailVerified": "2026-08-15T14:44:48.292Z",
+      "image": null,
+      "role": "USER",
+      "password": null,
+      "twoFactorHash": null,
+      "createdAt": "2026-08-15T14:44:48.294Z"
+    }
+  ],
+  "products": [
+    {
+      "id": "cmsp86rdc0001msdokymh16am",
+      "name": "Tarte Citron Meringuée",
+      "description": "Le grand classique revisité : un crémeux citron jaune de Menton peps et acidulé, surmonté d'une meringue suisse légère et onctueuse, le tout reposant sur une pâte sablée croustillante aux amandes torréfiées.",
+      "price": 5.5,
+      "imageUrl": "/images/hero.jpg",
+      "category": "TARTES",
+      "isAvailable": true,
+      "isSignature": true,
+      "signatureOrder": 1,
+      "inventory": 50,
+      "views": 2,
+      "sales": 0,
+      "createdAt": "2026-08-11T22:22:02.256Z",
+      "updatedAt": "2026-08-15T19:21:31.675Z"
+    },
+    {
+      "id": "cmsp86rdo0002msdosp8enhhc",
+      "name": "L'Éclair Intense",
+      "description": "Pour les puristes du cacao : une pâte à choux à la perfection croquante, renfermant un crémeux extrêmement onctueux au chocolat noir grand cru 70%. Une longueur en bouche exceptionnelle.",
+      "price": 4.8,
+      "imageUrl": "/images/eclair.jpg",
+      "category": "PATISSERIE",
+      "isAvailable": true,
+      "isSignature": true,
+      "signatureOrder": 2,
+      "inventory": 28,
+      "views": 1,
+      "sales": 2,
+      "createdAt": "2026-08-11T22:22:02.269Z",
+      "updatedAt": "2026-08-15T15:11:41.745Z"
+    },
+    {
+      "id": "cmsp86re30003msdoborjgwcu",
+      "name": "Croissant Signature",
+      "description": "Le roi du petit-déjeuner : feuilletage pur beurre AOP extra-fin, croustillant à l'extérieur avec une mie filante, moelleuse et parfaitement alvéolée à l'intérieur. Cuit du matin même.",
+      "price": 1.9,
+      "imageUrl": "/images/croissant.jpg",
+      "category": "VIENNOISERIE",
+      "isAvailable": true,
+      "isSignature": true,
+      "signatureOrder": 3,
+      "inventory": 99,
+      "views": 2,
+      "sales": 1,
+      "createdAt": "2026-08-11T22:22:02.284Z",
+      "updatedAt": "2026-08-15T19:21:48.119Z"
+    },
+    {
+      "id": "cmss3rzdn0000msk0c4bgpc3t",
+      "name": "Pain au Chocolat",
+      "description": "Notre pain au chocolat pur beurre, avec deux généreuses barres de chocolat noir 70%. Croustillant à l'extérieur, fondant à l'intérieur.",
+      "price": 2.2,
+      "imageUrl": "/images/pain-au-chocolat.jpg",
+      "category": "VIENNOISERIE",
+      "isAvailable": true,
+      "isSignature": false,
+      "signatureOrder": null,
+      "inventory": 50,
+      "views": 0,
+      "sales": 0,
+      "createdAt": "2026-08-13T22:41:52.860Z",
+      "updatedAt": "2026-08-14T14:38:00.039Z"
+    },
+    {
+      "id": "cmss3rzdz0002msk0pirewfws",
+      "name": "Mille-Feuille Vanille",
+      "description": "Pâte feuilletée inversée caramélisée, crème légère à la vanille Bourbon de Madagascar. Un grand classique revisité pour plus de légèreté.",
+      "price": 6.5,
+      "imageUrl": "/images/mille-feuille.jpg",
+      "category": "PATISSERIE",
+      "isAvailable": true,
+      "isSignature": false,
+      "signatureOrder": null,
+      "inventory": 19,
+      "views": 2,
+      "sales": 1,
+      "createdAt": "2026-08-13T22:41:52.871Z",
+      "updatedAt": "2026-08-15T15:11:41.766Z"
+    }
+  ],
+  "productMedia": [
+    {
+      "id": "cmst55tu20001msv0p5vv6exs",
+      "productId": "cmsp86rdc0001msdokymh16am",
+      "url": "/images/tarte_citron.jpg",
+      "type": "IMAGE",
+      "order": 1
+    },
+    {
+      "id": "cmst55tuo0003msv0d30nrs0w",
+      "productId": "cmsp86rdo0002msdosp8enhhc",
+      "url": "/images/choc_eclair.jpg",
+      "type": "IMAGE",
+      "order": 1
+    },
+    {
+      "id": "cmst55tv50005msv0cirm77zd",
+      "productId": "cmsp86re30003msdoborjgwcu",
+      "url": "/images/croissant_coffee.jpg",
+      "type": "IMAGE",
+      "order": 1
+    },
+    {
+      "id": "cmst55tvl0007msv0wik7p2vt",
+      "productId": "cmss3rzdn0000msk0c4bgpc3t",
+      "url": "/images/pain_au_chocolat.jpg",
+      "type": "IMAGE",
+      "order": 1
+    },
+    {
+      "id": "cmst55tvz0009msv0ryjdd14q",
+      "productId": "cmss3rzdz0002msk0pirewfws",
+      "url": "/images/mille_feuille.jpg",
+      "type": "IMAGE",
+      "order": 1
+    }
+  ],
+  "storeSettings": [
+    {
+      "id": "MAIN",
+      "phone": "+33 1 23 45 67 89",
+      "email": "contact@lamaisonsucree.fr",
+      "address": "13 Place Vendôme, 75001 Paris, France",
+      "isVacationMode": false,
+      "hoursMonday": "Fermé",
+      "hoursTuesday": "08:00 - 19:30",
+      "hoursWednesday": "08:00 - 19:30",
+      "hoursThursday": "08:00 - 19:30",
+      "hoursFriday": "08:00 - 19:30",
+      "hoursSaturday": "08:30 - 20:00",
+      "hoursSunday": "08:30 - 14:00",
+      "updatedAt": "2026-08-14T14:02:37.694Z"
+    }
+  ],
+  "orders": [
+    {
+      "id": "cs_test_b1m6Kx3eJkKAnNRBxo2y7dZZKlRv5Cr5mWah0y6W8jpRcO7gU1PxwNchdg",
+      "userId": "cmsuhm5ut0000mskojy4wvg10",
+      "status": "PAID",
+      "total": 18,
+      "pickupDate": "2026-08-18T10:00:00.000Z",
+      "createdAt": "2026-08-15T15:11:41.694Z",
+      "updatedAt": "2026-08-15T15:13:59.396Z"
+    }
+  ],
+  "orderItems": [
+    {
+      "id": "cmsuikqri0002msko0n1oiz05",
+      "orderId": "cs_test_b1m6Kx3eJkKAnNRBxo2y7dZZKlRv5Cr5mWah0y6W8jpRcO7gU1PxwNchdg",
+      "productId": "cmsp86rdo0002msdosp8enhhc",
+      "quantity": 2,
+      "price": 4.8
+    },
+    {
+      "id": "cmsuikqri0003mskodktulfmq",
+      "orderId": "cs_test_b1m6Kx3eJkKAnNRBxo2y7dZZKlRv5Cr5mWah0y6W8jpRcO7gU1PxwNchdg",
+      "productId": "cmsp86re30003msdoborjgwcu",
+      "quantity": 1,
+      "price": 1.9
+    },
+    {
+      "id": "cmsuikqri0004mskowuxzzce4",
+      "orderId": "cs_test_b1m6Kx3eJkKAnNRBxo2y7dZZKlRv5Cr5mWah0y6W8jpRcO7gU1PxwNchdg",
+      "productId": "cmss3rzdz0002msk0pirewfws",
+      "quantity": 1,
+      "price": 6.5
+    }
+  ]
+}
