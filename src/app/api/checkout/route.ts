@@ -9,6 +9,10 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
 
 export async function POST(req: Request) {
   try {
+    const host = req.headers.get("host");
+    const protocol = req.headers.get("x-forwarded-proto") || (host?.includes("localhost") ? "http" : "https");
+    const baseUrl = req.headers.get("origin") || (host ? `${protocol}://${host}` : (process.env.NEXTAUTH_URL || "http://localhost:3000"));
+
     const session = await getServerSession(authOptions);
 
     if (!session || !session.user || !session.user.email) {
@@ -65,7 +69,7 @@ export async function POST(req: Request) {
           currency: "eur",
           product_data: {
             name: dbProduct.name,
-            images: dbProduct.imageUrl ? [new URL(dbProduct.imageUrl, process.env.NEXTAUTH_URL || "http://localhost:3000").toString()] : [],
+            images: dbProduct.imageUrl ? [new URL(dbProduct.imageUrl, baseUrl).toString()] : [],
           },
           unit_amount: Math.round(dbProduct.price * 100), // Vrai prix de la DB
         },
@@ -87,8 +91,8 @@ export async function POST(req: Request) {
     const checkoutSession = await stripe.checkout.sessions.create({
       line_items: lineItems,
       mode: "payment",
-      success_url: `${process.env.NEXTAUTH_URL || "http://localhost:3000"}/commande/succes?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.NEXTAUTH_URL || "http://localhost:3000"}/panier`,
+      success_url: `${baseUrl}/commande/succes?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${baseUrl}/panier`,
       customer_email: session.user.email,
       metadata: {
         userId: session.user.id,
