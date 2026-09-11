@@ -71,7 +71,7 @@ export default async function AdminOrdersPage({
                     </div>
                     {order.pickupDate && (
                       <div className="font-bold text-primary flex items-center gap-1 text-sm">
-                        Retrait: {format(new Date(order.pickupDate), "dd MMM à HH:mm", { locale: fr })}
+                        Retrait: {(() => { const d = new Date(order.pickupDate); return `${d.getUTCDate().toString().padStart(2,'0')} ${d.toLocaleString('fr-FR', { month: 'short', timeZone: 'UTC' })} à ${d.getUTCHours().toString().padStart(2,'0')}:${d.getUTCMinutes().toString().padStart(2,'0')}`; })()}
                       </div>
                     )}
                   </td>

@@ -118,7 +118,7 @@ export default function ProfileClient({ user }: { user: any }) {
                     {order.pickupDate && (
                       <p className="text-sm font-bold text-primary mt-1">
                         Retrait prévu le {new Date(order.pickupDate).toLocaleDateString('fr-FR', {
-                          day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit'
+                          day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'UTC'
                         })}
                       </p>
                     )}

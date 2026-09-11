@@ -39,7 +39,7 @@ export async function POST(req: Request) {
     }
 
     // Validation du délai minimum (2 heures)
-    const pickupDateTime = new Date(`${pickupDate}T${pickupTime}:00`);
+    const pickupDateTime = new Date(`${pickupDate}T${pickupTime}:00Z`);
     const minimumTime = new Date(Date.now() + 2 * 60 * 60 * 1000);
     
     if (pickupDateTime < minimumTime) {
