@@ -22,6 +22,10 @@ import { Footer } from "@/components/layout/Footer";
 export const metadata: Metadata = {
   title: "La Maison Sucrée | Pâtisserie d'Exception",
   description: "Commandez en ligne nos pâtisseries artisanales. Click & Collect et livraison.",
+  icons: {
+    icon: "/images/logo.jpg",
+    apple: "/images/logo.jpg",
+  },
 };
 
 import { getSettings } from "@/actions/settings";
