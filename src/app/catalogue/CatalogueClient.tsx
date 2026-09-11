@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import { Plus, X, ChevronRight, ChevronLeft, ShoppingBag } from "lucide-react";
+import { X, ChevronRight, ChevronLeft, ShoppingBag } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useCartStore } from "@/lib/store";
@@ -165,11 +165,7 @@ export default function CatalogueClient({ initialProducts }: { initialProducts: 
             </div>
           </div>
 
-          <div className="absolute top-6 right-6 opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-500 delay-75 z-10">
-            <button className="bg-white/20 backdrop-blur-md text-white w-12 h-12 rounded-full flex items-center justify-center shadow-2xl hover:bg-primary transition-colors border border-white/30">
-              <Plus className="w-6 h-6" />
-            </button>
-          </div>
+
         </div>
       </motion.div>
     );

@@ -17,7 +17,9 @@ export async function sendReceiptEmail(order: any, pickupDate: string, pickupTim
     return;
   }
 
-  const formattedDate = format(new Date(pickupDate), "EEEE d MMMM yyyy", { locale: fr });
+  // Parsing manuel YYYY-MM-DD pour éviter tout décalage UTC
+  const [year, month, day] = pickupDate.split('-').map(Number);
+  const formattedDate = format(new Date(year, month - 1, day), "EEEE d MMMM yyyy", { locale: fr });
   
   let itemsHtml = "";
   order.items.forEach((item: any) => {

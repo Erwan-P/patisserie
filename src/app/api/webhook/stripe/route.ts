@@ -44,9 +44,9 @@ export async function POST(req: Request) {
       
       const total = session.amount_total ? session.amount_total / 100 : 0;
 
-      // Combine date and time
-      const datePart = new Date(pickupDate).toISOString().split('T')[0];
-      const finalPickupDate = new Date(`${datePart}T${pickupTime}:00`);
+      // Combine date and time en évitant tout décalage UTC
+      const [year, month, day] = pickupDate.split('-').map(Number);
+      const finalPickupDate = new Date(year, month - 1, day, ...pickupTime.split(':').map(Number));
 
       // Create Order with Stripe session_id as the order ID
       const order = await prisma.order.create({

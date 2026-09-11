@@ -39,7 +39,9 @@ export default function PanierClient({ settings }: { settings: any }) {
 
   const generateTimeSlots = (dateString: string | null) => {
     if (!dateString) return [];
-    const date = new Date(dateString);
+    // Parsing manuel pour éviter tout décalage UTC (YYYY-MM-DD)
+    const [year, month, day] = dateString.split('-').map(Number);
+    const date = new Date(year, month - 1, day);
     const scheduleStr = getDaySchedule(date);
     if (scheduleStr === "Fermé" || !scheduleStr) return [];
 
@@ -184,7 +186,7 @@ export default function PanierClient({ settings }: { settings: any }) {
               >
                 <option value="" disabled>Sélectionner une date</option>
                 {availableDates.map((date) => (
-                  <option key={date.toISOString()} value={date.toISOString()}>
+                  <option key={date.toISOString()} value={format(date, "yyyy-MM-dd")}>
                     {format(date, "EEEE d MMMM", { locale: fr })}
                   </option>
                 ))}
