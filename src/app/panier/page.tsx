@@ -3,6 +3,7 @@ import { authOptions } from "@/lib/auth";
 import PanierClient from "./PanierClient";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { getSiteAssetUrl } from "@/lib/storage";
 
 export default async function PanierPage() {
   const session = await getServerSession(authOptions);
@@ -27,7 +28,7 @@ export default async function PanierPage() {
             Vérifiez vos articles et choisissez votre heure de retrait.
           </p>
         </div>
-        <PanierClient settings={settings} />
+        <PanierClient settings={settings} placeholderUrl={getSiteAssetUrl("placeholder_pastry.jpg")} />
       </div>
     </div>
   );

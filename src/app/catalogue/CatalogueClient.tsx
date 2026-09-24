@@ -17,7 +17,10 @@ const CATEGORIES = [
   { id: "GATEAU", label: "Gâteaux" },
 ];
 
-export default function CatalogueClient({ initialProducts }: { initialProducts: any[] }) {
+export default function CatalogueClient({ initialProducts, placeholderUrl }: {
+  initialProducts: any[];
+  placeholderUrl: string;
+}) {
   const [activeCategory, setActiveCategory] = useState("ALL");
   const [selectedProduct, setSelectedProduct] = useState<any | null>(null);
   
@@ -117,6 +120,7 @@ export default function CatalogueClient({ initialProducts }: { initialProducts: 
           <ProductModal 
             product={selectedProduct} 
             onClose={handleCloseModal} 
+            placeholderUrl={placeholderUrl}
           />
         )}
       </AnimatePresence>
@@ -125,7 +129,7 @@ export default function CatalogueClient({ initialProducts }: { initialProducts: 
 
   function ProductCard({ product }: { product: any }) {
     const firstMedia = product.media?.[0];
-    const thumbUrl = firstMedia?.type === "IMAGE" ? firstMedia.url : (product.imageUrl || "/images/placeholder.jpg");
+    const thumbUrl = firstMedia?.type === "IMAGE" ? firstMedia.url : (product.imageUrl || placeholderUrl);
     
     return (
       <motion.div
@@ -175,7 +179,11 @@ export default function CatalogueClient({ initialProducts }: { initialProducts: 
 // ----------------------------------------------------
 // PRODUCT MODAL COMPONENT (Internal for now)
 // ----------------------------------------------------
-function ProductModal({ product, onClose }: { product: any, onClose: () => void }) {
+function ProductModal({ product, onClose, placeholderUrl }: {
+  product: any;
+  onClose: () => void;
+  placeholderUrl: string;
+}) {
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
   const [direction, setDirection] = useState(0);
   const router = useRouter();
@@ -210,7 +218,7 @@ function ProductModal({ product, onClose }: { product: any, onClose: () => void 
 
   const mediaList = product.media?.length > 0 
     ? product.media 
-    : [{ id: "fallback", url: product.imageUrl || "/images/placeholder.jpg", type: "IMAGE" }];
+    : [{ id: "fallback", url: product.imageUrl || placeholderUrl, type: "IMAGE" }];
 
   const currentMedia = mediaList[currentMediaIndex];
 
