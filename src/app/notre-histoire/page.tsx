@@ -1,6 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
+import { getSiteAssetUrl } from '@/lib/storage';
 
 export const metadata = {
   title: "Notre Histoire | La Maison Sucrée",
@@ -56,7 +57,7 @@ export default function NotreHistoirePage() {
             <div className="lg:w-1/2">
               <div className="relative rounded-[2rem] overflow-hidden shadow-2xl">
                 <img 
-                  src="/images/founders-bakery.jpg" 
+                  src={getSiteAssetUrl("founders-bakery.jpg")}
                   alt="Juliette et Maxime devant La Maison Sucrée" 
                   className="w-full h-auto object-cover"
                 />
@@ -69,7 +70,7 @@ export default function NotreHistoirePage() {
             <div className="lg:w-1/2">
               <div className="relative rounded-[2rem] overflow-hidden shadow-2xl">
                 <img 
-                  src="/images/bakery-interior.jpg" 
+                  src={getSiteAssetUrl("bakery-interior.jpg")}
                   alt="L'intérieur de notre boutique" 
                   className="w-full h-auto object-cover"
                 />

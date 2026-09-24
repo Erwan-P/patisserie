@@ -27,7 +27,11 @@ const VineBackground = () => (
   </div>
 );
 
-export default function HomeClient({ featuredProducts }: { featuredProducts: (Product & { media?: any[] })[] }) {
+export default function HomeClient({ featuredProducts, heroUrl, placeholderUrl }: {
+  featuredProducts: (Product & { media?: any[] })[];
+  heroUrl: string;
+  placeholderUrl: string;
+}) {
   return (
     <div className="w-full bg-background selection:bg-primary selection:text-white overflow-hidden">
       
@@ -92,7 +96,7 @@ export default function HomeClient({ featuredProducts }: { featuredProducts: (Pr
           className="relative md:absolute right-0 md:top-1/2 md:-translate-y-1/2 w-[90vw] md:w-[45vw] lg:w-[40vw] h-[40vh] md:h-[80vh] rounded-tl-[60px] md:rounded-tl-[120px] rounded-bl-[60px] md:rounded-bl-[120px] overflow-hidden shadow-2xl z-10 self-end mt-8 md:mt-0 order-2 md:order-none"
         >
           <Image
-            src="/images/hero.jpg"
+            src={heroUrl}
             alt="Pâtisserie d'exception"
             fill
             className="object-cover"
@@ -172,7 +176,7 @@ export default function HomeClient({ featuredProducts }: { featuredProducts: (Pr
                           />
                         ) : (
                           <Image 
-                            src={product.imageUrl || "/images/placeholder.jpg"} 
+                            src={product.imageUrl || placeholderUrl}
                             alt={product.name} 
                             fill 
                             className="object-cover transition-transform duration-[2s] group-hover:scale-110"

@@ -3,6 +3,7 @@ import { Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import clsx from "clsx";
 import Clear2faOnLeave from "@/components/Clear2faOnLeave";
+import { getSiteAssetUrl } from "@/lib/storage";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -23,8 +24,8 @@ export const metadata: Metadata = {
   title: "La Maison Sucrée | Pâtisserie d'Exception",
   description: "Commandez en ligne nos pâtisseries artisanales. Click & Collect et livraison.",
   icons: {
-    icon: "/images/logo.jpg",
-    apple: "/images/logo.jpg",
+    icon: getSiteAssetUrl("logo.jpg"),
+    apple: getSiteAssetUrl("logo.jpg"),
   },
 };
 
@@ -43,7 +44,7 @@ export default async function RootLayout({
       <body className="antialiased min-h-[100lvh] flex flex-col">
         <AuthProvider>
           <Clear2faOnLeave />
-            <Header />
+            <Header logoUrl={getSiteAssetUrl("logo.jpg")} />
             <main className="flex-grow">
               {children}
             </main>
