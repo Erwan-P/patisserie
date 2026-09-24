@@ -3,10 +3,12 @@ import Link from "next/link";
 import { Plus, Search, Tag, Eye, ShoppingBag, Euro, AlertCircle, Sparkles } from "lucide-react";
 import ProductActions from "@/components/admin/ProductActions";
 import SignatureOrderControls from "@/components/admin/SignatureOrderControls";
+import { getSiteAssetUrl } from "@/lib/storage";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminProductsPage() {
+  const placeholderUrl = getSiteAssetUrl("placeholder_pastry.jpg");
   const products = await prisma.product.findMany({
     orderBy: { createdAt: 'desc' },
     include: { media: { orderBy: { order: 'asc' } } }
@@ -75,7 +77,7 @@ export default async function AdminProductsPage() {
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-4">
                         <div className="w-12 h-12 rounded-xl overflow-hidden bg-muted relative flex-shrink-0 border border-border">
-                          <img src={product.imageUrl || "/images/placeholder.jpg"} alt={product.name} className="w-full h-full object-cover" />
+                          <img src={product.imageUrl || placeholderUrl} alt={product.name} className="w-full h-full object-cover" />
                         </div>
                         <div>
                           <div className="font-bold text-foreground text-base group-hover:text-primary transition-colors">{product.name}</div>
@@ -145,7 +147,7 @@ export default async function AdminProductsPage() {
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-4">
                         <div className="w-12 h-12 rounded-xl overflow-hidden bg-muted relative flex-shrink-0 border border-border">
-                          <img src={product.imageUrl || "/images/placeholder.jpg"} alt={product.name} className="w-full h-full object-cover" />
+                          <img src={product.imageUrl || placeholderUrl} alt={product.name} className="w-full h-full object-cover" />
                         </div>
                         <div>
                           <div className="font-bold text-foreground text-base group-hover:text-primary transition-colors">{product.name}</div>

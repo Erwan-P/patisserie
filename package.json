@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "postbuild": "node scripts/migrate-assets-to-supabase.mjs",
+    "storage:migrate": "node scripts/migrate-assets-to-supabase.mjs",
     "start": "next start",
     "lint": "eslint"
   },

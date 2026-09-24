@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { prisma } from "@/lib/prisma";
 import CatalogueClient from "./CatalogueClient";
 import { Metadata } from "next";
+import { getSiteAssetUrl } from "@/lib/storage";
 
 export const metadata: Metadata = {
   title: "La Carte | La Maison Sucrée",
@@ -9,7 +10,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "La Carte | La Maison Sucrée",
     description: "Découvrez nos créations artisanales, confectionnées chaque jour avec passion et des ingrédients d'exception.",
-    images: ["/images/hero.jpg"],
+    images: [getSiteAssetUrl("hero.jpg")],
   }
 };
 
@@ -64,7 +65,10 @@ export default async function CataloguePage() {
         </div>
 
         <Suspense fallback={<div className="h-96 flex items-center justify-center text-muted-foreground">Chargement de la carte...</div>}>
-          <CatalogueClient initialProducts={products} />
+          <CatalogueClient
+            initialProducts={products}
+            placeholderUrl={getSiteAssetUrl("placeholder_pastry.jpg")}
+          />
         </Suspense>
       </div>
     </div>

@@ -9,7 +9,7 @@ import { fr } from "date-fns/locale";
 import { useRouter } from "next/navigation";
 import type { StoreSettings } from "@prisma/client";
 
-export default function PanierClient({ settings }: { settings: StoreSettings | null }) {
+export default function PanierClient({ settings, placeholderUrl }: { settings: StoreSettings | null; placeholderUrl: string }) {
   const { items, updateQuantity, removeItem, pickupDate, pickupTime, setPickupSlot } = useCartStore();
   const [loading, setLoading] = useState(false);
   const [cgvAccepted, setCgvAccepted] = useState(false);
@@ -132,7 +132,7 @@ export default function PanierClient({ settings }: { settings: StoreSettings | n
               <div key={item.product.id} className="flex flex-col sm:flex-row items-start sm:items-center gap-6 pb-6 border-b border-border last:border-0 last:pb-0">
                 <div className="relative w-24 h-24 rounded-2xl overflow-hidden bg-muted flex-shrink-0">
                   <Image 
-                    src={item.product.imageUrl || "/images/placeholder.jpg"} 
+                    src={item.product.imageUrl || placeholderUrl}
                     alt={item.product.name} 
                     fill 
                     className="object-cover"
