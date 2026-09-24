@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
 import { getVerifiedAdminSession } from "@/lib/admin-auth";
-import { writeFile, mkdir } from "fs/promises";
-import path from "path";
-import { existsSync } from "fs";
+import { getPublicStorageUrl, getStorageClient, STORAGE_BUCKET } from "@/lib/storage";
+
+export const runtime = "nodejs";
+
+const MAX_FILE_SIZE = 4 * 1024 * 1024;
 
 export async function POST(request: Request) {
   const session = await getVerifiedAdminSession();
@@ -28,9 +30,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Format d'image non autorisé." }, { status: 400 });
     }
 
-    const maxSize = 5 * 1024 * 1024;
-    if (file.size > maxSize) {
-      return NextResponse.json({ error: "L'image ne doit pas dépasser 5 Mo." }, { status: 400 });
+    if (file.size > MAX_FILE_SIZE) {
+      return NextResponse.json({ error: "L'image ne doit pas dépasser 4 Mo." }, { status: 400 });
     }
 
     const bytes = await file.arrayBuffer();
@@ -50,19 +51,22 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Le contenu du fichier ne correspond pas à une image valide." }, { status: 400 });
     }
 
-    // Ensure uploads directory exists
-    const uploadDir = path.join(process.cwd(), "public", "uploads");
-    if (!existsSync(uploadDir)) {
-      await mkdir(uploadDir, { recursive: true });
+    const filename = `${crypto.randomUUID()}.${extensions[file.type]}`;
+    const now = new Date();
+    const objectPath = `products/${now.getUTCFullYear()}/${String(now.getUTCMonth() + 1).padStart(2, "0")}/${filename}`;
+    const supabase = getStorageClient();
+    const { error } = await supabase.storage.from(STORAGE_BUCKET).upload(objectPath, buffer, {
+      contentType: file.type,
+      cacheControl: "31536000",
+      upsert: false,
+    });
+
+    if (error) {
+      console.error("Supabase upload error:", error.message);
+      return NextResponse.json({ error: "Le stockage de l'image a échoué." }, { status: 502 });
     }
 
-    // Generate unique filename
-    const filename = `${crypto.randomUUID()}.${extensions[file.type]}`;
-    const filepath = path.join(uploadDir, filename);
-
-    await writeFile(filepath, buffer);
-
-    return NextResponse.json({ url: `/uploads/${filename}` });
+    return NextResponse.json({ url: getPublicStorageUrl(objectPath) });
   } catch (error) {
     console.error("Upload error:", error);
     return NextResponse.json({ error: "Erreur lors de l'upload de l'image." }, { status: 500 });

@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import HomeClient from "@/components/home/HomeClient";
+import { getSiteAssetUrl } from "@/lib/storage";
 
 export default async function Home() {
   // Fetch signature products ordered by signatureOrder
@@ -10,6 +11,10 @@ export default async function Home() {
   });
 
   return (
-    <HomeClient featuredProducts={signatureProducts} />
+    <HomeClient
+      featuredProducts={signatureProducts}
+      heroUrl={getSiteAssetUrl("hero.jpg")}
+      placeholderUrl={getSiteAssetUrl("placeholder_pastry.jpg")}
+    />
   );
 }

@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useSession, signOut } from "next-auth/react";
 import { useCartStore } from "@/lib/store";
 
-export function Header() {
+export function Header({ logoUrl }: { logoUrl: string }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const { data: session, status } = useSession();
@@ -44,7 +44,7 @@ export function Header() {
         {/* Logo */}
         <div className="flex-1 md:flex-none text-center md:text-left flex items-center gap-3">
           <Image 
-            src="/images/logo.jpg" 
+            src={logoUrl}
             alt="La Maison Sucrée Logo" 
             width={64} 
             height={64} 

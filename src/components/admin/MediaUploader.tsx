@@ -11,7 +11,8 @@ export type MediaItem = {
   size: number;
 };
 
-const MAX_TOTAL_SIZE = 20 * 1024 * 1024; // 20 MB
+const MAX_FILE_SIZE = 4 * 1024 * 1024;
+const MAX_TOTAL_SIZE = 20 * 1024 * 1024;
 
 export default function MediaUploader({ 
   initialMedia = [], 
@@ -39,19 +40,27 @@ export default function MediaUploader({
     let tempTotal = totalSize;
 
     for (const file of newFiles) {
+      if (!["image/jpeg", "image/png", "image/webp", "image/gif"].includes(file.type)) {
+        alert(`Le fichier ${file.name} n'est pas une image JPG, PNG, WebP ou GIF valide.`);
+        continue;
+      }
+
+      if (file.size > MAX_FILE_SIZE) {
+        alert(`Le fichier ${file.name} dépasse la limite de 4 Mo.`);
+        continue;
+      }
+
       if (tempTotal + file.size > MAX_TOTAL_SIZE) {
         alert(`Le fichier ${file.name} dépasse la limite totale de 20 Mo.`);
         continue;
       }
       
       tempTotal += file.size;
-      const isVideo = file.type.startsWith("video/");
-      
       newMediaItems.push({
         id: Math.random().toString(36).substring(7),
         file,
         url: URL.createObjectURL(file),
-        type: isVideo ? "VIDEO" : "IMAGE",
+        type: "IMAGE",
         size: file.size
       });
     }
@@ -152,7 +161,7 @@ export default function MediaUploader({
         ref={fileInputRef}
         onChange={handleFileChange}
         className="hidden"
-        accept="image/*,video/mp4,video/webm"
+        accept="image/jpeg,image/png,image/webp,image/gif"
         multiple
       />
     </div>
