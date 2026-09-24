@@ -1,14 +1,13 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getVerifiedAdminSession } from "@/lib/admin-auth";
 import { subDays, subMonths, subYears, startOfDay } from "date-fns";
 
 export type PeriodFilter = "day" | "week" | "month" | "year" | "all";
 
 export async function getDashboardStats(period: PeriodFilter = "all") {
-  const session = await getServerSession(authOptions);
+  const session = await getVerifiedAdminSession();
   
   if (!session || session.user?.role !== "ADMIN") {
     throw new Error("Non autorisé");
@@ -68,6 +67,11 @@ export async function getDashboardStats(period: PeriodFilter = "all") {
 }
 
 export async function getPopularProducts(sortBy: "sales" | "views" = "sales", order: "asc" | "desc" = "desc") {
+  const session = await getVerifiedAdminSession();
+  if (!session) {
+    throw new Error("Non autorisé");
+  }
+
   const products = await prisma.product.findMany({
     orderBy: {
       [sortBy]: order

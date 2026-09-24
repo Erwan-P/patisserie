@@ -94,20 +94,53 @@ export const authOptions: NextAuthOptions = {
           return null;
         }
 
+        const normalizedEmail = credentials.email.trim().toLowerCase();
+        const rateLimitIdentifier = `login:${normalizedEmail}`;
+        let rateLimit = await prisma.rateLimit.upsert({
+          where: { identifier: rateLimitIdentifier },
+          update: {},
+          create: { identifier: rateLimitIdentifier, attempts: 0 },
+        });
+        const lockDuration = 15 * 60 * 1000;
+
+        if (rateLimit.lockedAt) {
+          const lockExpired = Date.now() - rateLimit.lockedAt.getTime() >= lockDuration;
+          if (!lockExpired) return null;
+          rateLimit = await prisma.rateLimit.update({
+            where: { identifier: rateLimitIdentifier },
+            data: { attempts: 0, lockedAt: null },
+          });
+        }
+
         const user = await prisma.user.findUnique({
-          where: { email: credentials.email }
+          where: { email: normalizedEmail }
         });
 
         // Only allow users with a password to login via credentials (which are our admins)
         if (!user || !user.password) {
+          const attempts = rateLimit.attempts + 1;
+          await prisma.rateLimit.update({
+            where: { identifier: rateLimitIdentifier },
+            data: { attempts, lockedAt: attempts >= 5 ? new Date() : null },
+          });
           return null;
         }
 
         const isPasswordValid = await bcrypt.compare(credentials.password, user.password);
 
         if (!isPasswordValid) {
+          const attempts = rateLimit.attempts + 1;
+          await prisma.rateLimit.update({
+            where: { identifier: rateLimitIdentifier },
+            data: { attempts, lockedAt: attempts >= 5 ? new Date() : null },
+          });
           return null;
         }
+
+        await prisma.rateLimit.update({
+          where: { identifier: rateLimitIdentifier },
+          data: { attempts: 0, lockedAt: null },
+        });
 
         return {
           id: user.id,
@@ -141,5 +174,5 @@ export const authOptions: NextAuthOptions = {
     signIn: "/auth/signin", // We will create a custom sign-in page
     verifyRequest: "/auth/verify-request",
   },
-  secret: process.env.NEXTAUTH_SECRET || "super-secret-key-for-dev",
+  secret: process.env.NEXTAUTH_SECRET,
 };

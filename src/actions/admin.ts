@@ -5,6 +5,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
+import { admin2FACookie, createAdmin2FAToken } from "@/lib/admin-2fa";
 
 export async function verifyAdmin2FA(pin: string) {
   const session = await getServerSession(authOptions);
@@ -12,7 +13,7 @@ export async function verifyAdmin2FA(pin: string) {
     return { error: "Non autorisé." };
   }
 
-  const identifier = session.user.email;
+  const identifier = `2fa:${session.user.email.toLowerCase()}`;
   
   let rateLimit = await prisma.rateLimit.findUnique({ where: { identifier } });
   if (!rateLimit) {
@@ -47,7 +48,7 @@ export async function verifyAdmin2FA(pin: string) {
     }
   }
 
-  const user = await prisma.user.findUnique({ where: { email: identifier } });
+  const user = await prisma.user.findUnique({ where: { email: session.user.email.toLowerCase() } });
   if (!user?.twoFactorHash) return { error: "Erreur de configuration 2FA." };
 
   const isValid = await bcrypt.compare(pin, user.twoFactorHash);
@@ -75,16 +76,13 @@ export async function verifyAdmin2FA(pin: string) {
   });
 
   const cookieStore = await cookies();
-  cookieStore.set("admin_2fa_verified", "true", {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    // Pas de maxAge -> Cookie de session stricte, supprimé à la fermeture du navigateur
-  });
+  const token = await createAdmin2FAToken(session.user.id);
+  cookieStore.set(admin2FACookie.name, token, admin2FACookie.options);
 
   return { success: true };
 }
 
 export async function clearAdmin2FA() {
   const cookieStore = await cookies();
-  cookieStore.delete("admin_2fa_verified");
+  cookieStore.delete(admin2FACookie.name);
 }

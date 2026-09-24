@@ -1,8 +1,7 @@
 "use server";
 
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getVerifiedAdminSession } from "@/lib/admin-auth";
 
 export async function rebalanceSignatureOrders(tx: any, productId: string, targetOrder: number) {
   // Get all active signatures except the current one, ordered by their current signatureOrder
@@ -43,7 +42,7 @@ export async function rebalanceSignatureOrders(tx: any, productId: string, targe
 }
 
 export async function moveSignature(productId: string, direction: "UP" | "DOWN") {
-  const session = await getServerSession(authOptions);
+  const session = await getVerifiedAdminSession();
   if (!session || session.user?.role !== "ADMIN") return { error: "Non autorisé" };
 
   try {
@@ -74,7 +73,7 @@ export async function createProduct(data: {
   signatureOrder?: number | null;
   media: { url: string, type: string, order: number }[];
 }) {
-  const session = await getServerSession(authOptions);
+  const session = await getVerifiedAdminSession();
   
   if (!session || session.user?.role !== "ADMIN") {
     return { error: "Non autorisé." };
@@ -131,7 +130,7 @@ export async function updateProduct(
     media?: { url: string, type: string, order: number }[];
   }
 ) {
-  const session = await getServerSession(authOptions);
+  const session = await getVerifiedAdminSession();
   
   if (!session || session.user?.role !== "ADMIN") {
     return { error: "Non autorisé." };
@@ -193,7 +192,7 @@ export async function updateProduct(
 }
 
 export async function deleteProduct(id: string) {
-  const session = await getServerSession(authOptions);
+  const session = await getVerifiedAdminSession();
   
   if (!session || session.user?.role !== "ADMIN") {
     return { error: "Non autorisé." };
