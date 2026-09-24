@@ -12,9 +12,10 @@ type CartInput = {
 
 function getPublicBaseUrl(req: Request) {
   if (process.env.NEXTAUTH_URL) return new URL(process.env.NEXTAUTH_URL).origin;
-  if (process.env.NODE_ENV === "production") {
-    throw new Error("NEXTAUTH_URL doit être configuré en production.");
+  if (process.env.VERCEL_PROJECT_PRODUCTION_URL) {
+    return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`;
   }
+  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
   return new URL(req.url).origin;
 }
 
