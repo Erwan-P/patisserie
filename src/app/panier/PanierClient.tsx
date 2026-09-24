@@ -7,8 +7,9 @@ import { Trash2, Plus, Minus, Calendar, Clock, CreditCard } from "lucide-react";
 import { format, addDays, isBefore, startOfToday } from "date-fns";
 import { fr } from "date-fns/locale";
 import { useRouter } from "next/navigation";
+import type { StoreSettings } from "@prisma/client";
 
-export default function PanierClient({ settings }: { settings: any }) {
+export default function PanierClient({ settings }: { settings: StoreSettings | null }) {
   const { items, updateQuantity, removeItem, pickupDate, pickupTime, setPickupSlot } = useCartStore();
   const [loading, setLoading] = useState(false);
   const [cgvAccepted, setCgvAccepted] = useState(false);

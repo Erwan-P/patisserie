@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { updateSettings } from "@/actions/settings";
 import { Save, Check, AlertTriangle, Clock, MapPin, Phone, Mail } from "lucide-react";
+import type { StoreSettings } from "@prisma/client";
 
 function DayScheduleInput({ 
   label, 
@@ -95,8 +96,8 @@ function DayScheduleInput({
   );
 }
 
-export default function SettingsClient({ initialSettings }: { initialSettings: any }) {
-  const [formData, setFormData] = useState(initialSettings);
+export default function SettingsClient({ initialSettings }: { initialSettings: StoreSettings }) {
+  const [formData, setFormData] = useState<StoreSettings>(initialSettings);
   const [isSaving, setIsSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 

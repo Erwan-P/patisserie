@@ -1,11 +1,10 @@
 "use server";
 
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getVerifiedAdminSession } from "@/lib/admin-auth";
 
 export async function updateOrderStatus(id: string, status: string) {
-  const session = await getServerSession(authOptions);
+  const session = await getVerifiedAdminSession();
   
   if (!session || session.user?.role !== "ADMIN") {
     return { error: "Non autorisé." };

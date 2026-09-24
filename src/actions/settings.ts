@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { getVerifiedAdminSession } from "@/lib/admin-auth";
 
 export async function getSettings() {
   let settings = await prisma.storeSettings.findUnique({
@@ -43,6 +44,11 @@ export async function updateSettings(data: {
   hoursSaturday: string;
   hoursSunday: string;
 }) {
+  const session = await getVerifiedAdminSession();
+  if (!session) {
+    throw new Error("Non autorisé.");
+  }
+
   const settings = await prisma.storeSettings.upsert({
     where: { id: "MAIN" },
     update: data,

@@ -41,3 +41,7 @@ yarn-error.log*
 next-env.d.ts
 
 /src/generated/prisma
+
+# local database snapshots and migration exports
+/dev.db
+/prisma/data_dump.json

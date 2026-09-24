@@ -5,18 +5,29 @@ import bcrypt from "bcryptjs";
 const prisma = new PrismaClient();
 
 async function main() {
-  const password = await bcrypt.hash('admin123', 10);
-  const twoFactorHash = await bcrypt.hash('123456', 10);
+  const adminEmail = process.env.ADMIN_EMAIL;
+  const adminPassword = process.env.ADMIN_PASSWORD;
+  const admin2FAPin = process.env.ADMIN_2FA_PIN;
+
+  if (!adminEmail || !adminPassword || !admin2FAPin) {
+    throw new Error("ADMIN_EMAIL, ADMIN_PASSWORD et ADMIN_2FA_PIN sont requis pour créer l'administrateur.");
+  }
+  if (adminPassword.length < 12 || !/^\d{6}$/.test(admin2FAPin)) {
+    throw new Error("ADMIN_PASSWORD doit contenir au moins 12 caractères et ADMIN_2FA_PIN exactement 6 chiffres.");
+  }
+
+  const password = await bcrypt.hash(adminPassword, 12);
+  const twoFactorHash = await bcrypt.hash(admin2FAPin, 12);
 
   const admin = await prisma.user.upsert({
-    where: { email: 'admin@gmail.com' },
+    where: { email: adminEmail },
     update: {
       password,
       twoFactorHash,
       role: 'ADMIN'
     },
     create: {
-      email: 'admin@gmail.com',
+      email: adminEmail,
       name: 'Administrateur',
       password,
       twoFactorHash,
