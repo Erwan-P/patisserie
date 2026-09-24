@@ -5,10 +5,13 @@ import EmailProvider from "next-auth/providers/email";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import nodemailer from "nodemailer";
+import type { Adapter } from "next-auth/adapters";
 
-function html(params: { url: string; host: string }) {
-  const { url, host } = params;
-  const escapedHost = host.replace(/\./g, "&#8203;.");
+if (!process.env.NEXTAUTH_URL && process.env.VERCEL_PROJECT_PRODUCTION_URL) {
+  process.env.NEXTAUTH_URL = `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`;
+}
+
+function html({ url }: { url: string }) {
 
   return `
 <body style="background: #FDFBF7; font-family: Arial, sans-serif; padding: 40px 0; margin: 0;">
@@ -33,17 +36,17 @@ function html(params: { url: string; host: string }) {
 `;
 }
 
-function text({ url, host }: { url: string; host: string }) {
+function text({ url }: { url: string }) {
   return `Connexion à La Maison Sucrée\n\nCliquez sur ce lien pour vous connecter : ${url}\n\n`;
 }
 
 export const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(prisma) as any,
+  adapter: PrismaAdapter(prisma) as Adapter,
   providers: [
     EmailProvider({
       server: process.env.EMAIL_SERVER,
       from: process.env.EMAIL_FROM,
-      sendVerificationRequest: async ({ identifier, url, provider, theme }) => {
+      sendVerificationRequest: async ({ identifier, url, provider }) => {
         // En mode dev, on log toujours le lien au cas où l'envoi échoue
         if (process.env.NODE_ENV !== "production") {
           console.log(`\n=========================================\nMAGIC LINK FOR ${identifier}:\n${url}\n=========================================\n`);
@@ -55,7 +58,6 @@ export const authOptions: NextAuthOptions = {
           return;
         }
 
-        const { host } = new URL(url);
         const transport = nodemailer.createTransport({
           host: process.env.SMTP_HOST || "smtp-relay.brevo.com",
           port: Number(process.env.SMTP_PORT) || 587,
@@ -70,8 +72,8 @@ export const authOptions: NextAuthOptions = {
             to: identifier,
             from: provider.from,
             subject: `Connexion à La Maison Sucrée`,
-            text: text({ url, host }),
-            html: html({ url, host }),
+            text: text({ url }),
+            html: html({ url }),
           });
           const failed = result.rejected.concat(result.pending).filter(Boolean);
           if (failed.length) {
@@ -147,7 +149,7 @@ export const authOptions: NextAuthOptions = {
           email: user.email,
           name: user.name,
           role: user.role
-        } as any;
+        };
       }
     })
   ],
@@ -165,7 +167,7 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
-        token.role = (user as any).role || "USER";
+        token.role = user.role || "USER";
       }
       return token;
     },
