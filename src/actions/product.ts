@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { getVerifiedAdminSession } from "@/lib/admin-auth";
+import { removeUnreferencedStorageUrls } from "@/lib/storage-cleanup";
 
 export async function rebalanceSignatureOrders(tx: any, productId: string, targetOrder: number) {
   // Get all active signatures except the current one, ordered by their current signatureOrder
@@ -137,6 +138,13 @@ export async function updateProduct(
   }
 
   try {
+    const previousMedia = data.media
+      ? await prisma.product.findUnique({
+          where: { id },
+          select: { imageUrl: true, media: { select: { url: true } } },
+        })
+      : null;
+
     const product = await prisma.$transaction(async (tx) => {
       const updateData: any = {
         name: data.name,
@@ -148,7 +156,7 @@ export async function updateProduct(
         signatureOrder: data.isSignature ? undefined : null, // Clear order if not signature
       };
 
-      if (data.media && data.media.length > 0) {
+      if (data.media) {
         const mainImage = data.media.find(m => m.type === "IMAGE")?.url || data.media[0]?.url || null;
         updateData.imageUrl = mainImage;
       }
@@ -184,6 +192,17 @@ export async function updateProduct(
       return updated;
     });
 
+    if (previousMedia && data.media) {
+      const retainedUrls = new Set(data.media.map((media) => media.url));
+      const removedUrls = [previousMedia.imageUrl, ...previousMedia.media.map((media) => media.url)]
+        .filter((url): url is string => Boolean(url) && !retainedUrls.has(url as string));
+      try {
+        await removeUnreferencedStorageUrls(removedUrls);
+      } catch (cleanupError) {
+        console.error("Product media cleanup error:", cleanupError);
+      }
+    }
+
     return { success: true, product };
   } catch (error) {
     console.error("Update product error:", error);
@@ -199,9 +218,24 @@ export async function deleteProduct(id: string) {
   }
 
   try {
+    const product = await prisma.product.findUnique({
+      where: { id },
+      select: { imageUrl: true, media: { select: { url: true } } },
+    });
+    if (!product) return { error: "Produit introuvable." };
+
     await prisma.product.delete({
       where: { id },
     });
+
+    try {
+      await removeUnreferencedStorageUrls([
+        product.imageUrl,
+        ...product.media.map((media) => media.url),
+      ]);
+    } catch (cleanupError) {
+      console.error("Deleted product media cleanup error:", cleanupError);
+    }
 
     return { success: true };
   } catch (error) {
