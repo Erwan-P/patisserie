@@ -6,6 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "storage:migrate": "node scripts/migrate-assets-to-supabase.mjs",
+    "postbuild": "node scripts/delete-known-unused-storage.mjs",
+    "storage:cleanup": "node scripts/cleanup-unused-storage.mjs",
     "start": "next start",
     "lint": "eslint"
   },
