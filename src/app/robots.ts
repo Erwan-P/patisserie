@@ -5,8 +5,6 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: '*',
       allow: '/',
-      disallow: ['/admin/', '/profil/', '/panier/', '/commande/'],
     },
-    sitemap: 'https://lamaisonsucree.fr/sitemap.xml',
   };
 }

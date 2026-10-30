@@ -14,7 +14,11 @@ Les quotas utilisent un seul `INSERT ... ON CONFLICT ... RETURNING` PostgreSQL p
 
 Les routes de paiement et de téléversement vérifient l'origine du navigateur et leurs quotas. Le webhook Stripe conserve sa vérification de signature, indépendante des contrôles d'origine du navigateur. Les images sont décodées et réencodées par sharp, avec une limite de pixels et suppression des métadonnées.
 
-Le proxy fournit une CSP avec un nonce par requête. Le layout attend une connexion pour garantir le rendu dynamique et l'application des nonces. Les styles inline nécessaires à l'interface sont conservés. Les pages sensibles vérifient leurs autorisations au plus près des lectures, et les actions serveur vérifient les leurs indépendamment.
+Le proxy fournit une CSP avec un nonce par requête. Le layout attend une connexion pour garantir le rendu dynamique et l'application des nonces, également transmis à Framer Motion. Les scripts et blocs de styles inline exigent le nonce. Seuls les attributs de style nécessaires à React et aux animations utilisent `style-src-attr 'unsafe-inline'` ; cette exception n'autorise ni script inline ni `eval` en production. Les pages sensibles vérifient leurs autorisations au plus près des lectures, et les actions serveur vérifient les leurs indépendamment.
+
+La démo utilise `X-Robots-Tag: noindex, nofollow`. `robots.txt` n'énumère aucun espace privé et n'annonce pas de sitemap inexistant. Lors du lancement commercial, `SITE_INDEXABLE=true` autorisera l'indexation des pages publiques, tout en conservant la non-indexation des espaces de connexion, de compte, d'administration et de commande. Le fichier robots autorise le parcours des pages pour que les moteurs puissent lire l'en-tête `noindex` ; il ne constitue pas un mécanisme d'authentification.
+
+Les fichiers statiques publics et `robots.txt` peuvent recevoir un CORS `*` de la plateforme. Cela ne donne aucun accès aux données de session : les API sensibles ne renvoient ni origine CORS permissive ni autorisation de credentials intersites. Ne pas ajouter de politique CORS globale pour satisfaire un scanner qui ne distingue pas ces ressources.
 
 ## Variables à conserver côté serveur
 

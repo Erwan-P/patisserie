@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { connection } from "next/server";
+import { headers } from "next/headers";
 import { Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import clsx from "clsx";
@@ -39,12 +40,13 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   await connection();
+  const nonce = (await headers()).get("x-nonce") || undefined;
   const settings = await getSettings();
 
   return (
     <html lang="fr" className={clsx(inter.variable, playfair.variable)}>
       <body className="antialiased min-h-[100lvh] flex flex-col">
-        <AuthProvider>
+        <AuthProvider nonce={nonce}>
           <Clear2faOnLeave />
             <Header logoUrl={getSiteAssetUrl("logo.jpg")} />
             <main className="flex-grow">

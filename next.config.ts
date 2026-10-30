@@ -28,7 +28,16 @@ const nextConfig: NextConfig = {
       });
     }
 
-    return [{ source: "/:path*", headers: securityHeaders }];
+    const noIndex = { key: "X-Robots-Tag", value: "noindex, nofollow" };
+    // Demo by default. Enable public indexing only when the real site launches.
+    if (process.env.SITE_INDEXABLE !== "true") securityHeaders.push(noIndex);
+
+    return [
+      { source: "/:path*", headers: securityHeaders },
+      ...["admin", "profil", "panier", "commande", "auth"].map((path) => ({
+        source: `/${path}/:path*`, headers: [noIndex],
+      })),
+    ];
   },
 };
 
