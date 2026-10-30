@@ -1,13 +1,14 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import type { ProfileData } from "@/lib/profile";
 import { updateProfile, deleteAccount } from "@/actions/user";
 import { signOut } from "next-auth/react";
 import { AlertCircle, Package, User, Trash2, LogOut, Settings } from "lucide-react";
 import { useCartStore } from "@/lib/store";
 import Link from "next/link";
 
-export default function ProfileClient({ user }: { user: any }) {
+export default function ProfileClient({ user }: { user: ProfileData }) {
   const [name, setName] = useState(user.name || "");
   const [isPending, startTransition] = useTransition();
   const [message, setMessage] = useState({ text: "", type: "" });
@@ -30,7 +31,7 @@ export default function ProfileClient({ user }: { user: any }) {
     if (!confirm("Êtes-vous sûr de vouloir supprimer définitivement votre compte et l'historique de vos commandes ? Cette action est irréversible.")) {
       return;
     }
-    
+
     setIsDeleting(true);
     const res = await deleteAccount();
     if (res.error) {
@@ -43,7 +44,7 @@ export default function ProfileClient({ user }: { user: any }) {
 
   return (
     <div className="space-y-16">
-      
+
       {/* SECTION 1: PROFIL */}
       <section className="bg-white p-8 md:p-12 rounded-[2rem] shadow-sm border border-border">
         <div className="flex items-center gap-4 mb-8">
@@ -62,26 +63,26 @@ export default function ProfileClient({ user }: { user: any }) {
         <form onSubmit={handleUpdateProfile} className="space-y-6 max-w-md">
           <div>
             <label className="block text-sm font-semibold mb-2 text-muted-foreground">Adresse Email</label>
-            <input 
-              type="email" 
-              value={user.email} 
-              disabled 
+            <input
+              type="email"
+              value={user.email || ""}
+              disabled
               className="w-full px-4 py-3 rounded-xl border border-border bg-muted/50 text-muted-foreground cursor-not-allowed"
             />
             <p className="text-xs text-muted-foreground mt-2">Votre email ne peut pas être modifié car il sert à votre connexion (Lien Magique).</p>
           </div>
           <div>
             <label className="block text-sm font-semibold mb-2">Prénom & Nom</label>
-            <input 
-              type="text" 
+            <input
+              type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Jean Dupont"
               className="w-full px-4 py-3 rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
             />
           </div>
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             disabled={isPending}
             className="bg-foreground text-background hover:bg-primary hover:text-white px-8 py-3 rounded-xl text-sm uppercase tracking-widest font-bold transition-all disabled:opacity-50"
           >
@@ -101,11 +102,11 @@ export default function ProfileClient({ user }: { user: any }) {
 
         {user.orders.length === 0 ? (
           <div className="text-center py-12 bg-muted/20 rounded-2xl border border-dashed border-border">
-            <p className="text-muted-foreground">Vous n'avez pas encore passé de commande.</p>
+            <p className="text-muted-foreground">Vous n&apos;avez pas encore passé de commande.</p>
           </div>
         ) : (
           <div className="space-y-6">
-            {user.orders.map((order: any) => (
+            {user.orders.map((order) => (
               <div key={order.id} className="border border-border rounded-2xl p-6 transition-all hover:shadow-md">
                 <div className="flex flex-col md:flex-row md:items-center justify-between mb-4 pb-4 border-b border-border gap-4">
                   <div>
@@ -125,10 +126,10 @@ export default function ProfileClient({ user }: { user: any }) {
                   </div>
                   <div className="flex items-center gap-4">
                     <span className="px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold uppercase tracking-widest">
-                      {order.status === "PENDING" ? "En attente" : 
-                       order.status === "PAID" ? "Payée" : 
-                       order.status === "PREPARING" ? "En préparation" : 
-                       order.status === "READY" ? "Prête" : 
+                      {order.status === "PENDING" ? "En attente" :
+                       order.status === "PAID" ? "Payée" :
+                       order.status === "PREPARING" ? "En préparation" :
+                       order.status === "READY" ? "Prête" :
                        order.status === "COMPLETED" ? "Terminée" :
                        order.status === "CANCELLED" ? "Annulée" : order.status}
                     </span>
@@ -136,7 +137,7 @@ export default function ProfileClient({ user }: { user: any }) {
                   </div>
                 </div>
                 <div className="space-y-3">
-                  {order.items.map((item: any) => (
+                  {order.items.map((item) => (
                     <div key={item.id} className="flex items-center gap-4">
                       {item.product.imageUrl ? (
                         <img src={item.product.imageUrl} alt={item.product.name} className="w-12 h-12 object-cover rounded-lg" />
@@ -167,7 +168,7 @@ export default function ProfileClient({ user }: { user: any }) {
           <h2 className={`text-2xl font-serif font-bold ${user.role === 'ADMIN' ? 'text-muted-foreground' : 'text-red-950'}`}>Zone Dangereuse</h2>
         </div>
         <p className={`${user.role === 'ADMIN' ? 'text-muted-foreground' : 'text-red-800'} mb-8 max-w-2xl`}>
-          {user.role === 'ADMIN' 
+          {user.role === 'ADMIN'
             ? "En tant qu'administrateur du site, vous ne pouvez pas supprimer votre compte. Ce filet de sécurité empêche la perte d'accès au tableau de bord."
             : "La suppression de votre compte entraînera l'effacement définitif de vos données personnelles et de l'historique de vos commandes. Cette action est irréversible."
           }
@@ -176,7 +177,7 @@ export default function ProfileClient({ user }: { user: any }) {
           {/* Mobile Only Actions */}
           <div className="md:hidden flex flex-col gap-4 mb-4">
             {user.role === 'ADMIN' && (
-              <Link 
+              <Link
                 href="/admin"
                 className="flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-bold transition-colors bg-primary hover:bg-primary/90 text-white"
               >
@@ -184,7 +185,7 @@ export default function ProfileClient({ user }: { user: any }) {
                 Administration
               </Link>
             )}
-            <button 
+            <button
               onClick={() => {
                 useCartStore.getState().clearCart();
                 signOut({ callbackUrl: '/' });
@@ -196,12 +197,12 @@ export default function ProfileClient({ user }: { user: any }) {
             </button>
           </div>
 
-          <button 
+          <button
             onClick={handleDeleteAccount}
             disabled={isDeleting || user.role === 'ADMIN'}
             className={`flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
-              user.role === 'ADMIN' 
-                ? 'bg-muted text-muted-foreground' 
+              user.role === 'ADMIN'
+                ? 'bg-muted text-muted-foreground'
                 : 'bg-red-600 hover:bg-red-700 text-white'
             }`}
           >

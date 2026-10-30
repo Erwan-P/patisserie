@@ -1,3 +1,5 @@
+import { isSameOriginRequest } from "@/lib/browser-request";
+import { publicRequestBudget } from "@/lib/request-security";
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
@@ -46,6 +48,10 @@ export async function POST(req: Request) {
       );
     }
 
+    if (!isSameOriginRequest(req)) return NextResponse.json({ error: "Origine non autorisée." }, { status: 403 });
+    if (!req.headers.get("content-type")?.startsWith("application/json")) return NextResponse.json({ error: "Format non autorisé." }, { status: 415 });
+    if (Number(req.headers.get("content-length") || 0) > 32768) return NextResponse.json({ error: "Requête trop volumineuse." }, { status: 413 });
+    if (!await publicRequestBudget("checkout", session.user.id, 20, 60000)) return NextResponse.json({ error: "Trop de requêtes. Réessayez plus tard." }, { status: 429 });
     const body: unknown = await req.json();
     if (typeof body !== "object" || body === null) {
       return NextResponse.json({ error: "Requête invalide." }, { status: 400 });

@@ -15,13 +15,3 @@ export async function reset2FA() {
   cookieStore.delete(admin2FACookie.name);
   return { success: true };
 }
-
-import { prisma } from "@/lib/prisma";
-
-export async function checkIsAdmin(email: string) {
-  const user = await prisma.user.findUnique({
-    where: { email },
-    select: { role: true }
-  });
-  return user?.role === "ADMIN";
-}

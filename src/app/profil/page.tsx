@@ -3,6 +3,7 @@ import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import ProfileClient from "./ProfileClient";
+import { profileSelect } from "@/lib/profile";
 
 export const metadata = {
   title: "Mon Profil | La Maison Sucrée",
@@ -18,18 +19,7 @@ export default async function ProfilPage() {
   // Fetch full user data and orders
   const user = await prisma.user.findUnique({
     where: { email: session.user.email },
-    include: {
-      orders: {
-        orderBy: { createdAt: 'desc' },
-        include: {
-          items: {
-            include: {
-              product: true,
-            }
-          }
-        }
-      }
-    }
+    select: profileSelect,
   });
 
   if (!user) {

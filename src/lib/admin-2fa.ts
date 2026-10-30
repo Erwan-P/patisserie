@@ -3,6 +3,7 @@ const TOKEN_LIFETIME_SECONDS = 30 * 60;
 
 type Admin2FAPayload = {
   userId: string;
+  binding: string;
   expiresAt: number;
 };
 
@@ -38,9 +39,10 @@ async function getSigningKey() {
   );
 }
 
-export async function createAdmin2FAToken(userId: string) {
+export async function createAdmin2FAToken(userId: string, binding: string) {
   const payload: Admin2FAPayload = {
     userId,
+    binding,
     expiresAt: Math.floor(Date.now() / 1000) + TOKEN_LIFETIME_SECONDS,
   };
   const encodedPayload = toBase64Url(JSON.stringify(payload));
@@ -52,7 +54,7 @@ export async function createAdmin2FAToken(userId: string) {
   return `${encodedPayload}.${toBase64Url(new Uint8Array(signature))}`;
 }
 
-export async function verifyAdmin2FAToken(token: string | undefined, expectedUserId: string) {
+export async function verifyAdmin2FAToken(token: string | undefined, expectedUserId: string, expectedBinding: string) {
   if (!token) return false;
 
   try {
@@ -71,7 +73,8 @@ export async function verifyAdmin2FAToken(token: string | undefined, expectedUse
       new TextDecoder().decode(fromBase64Url(encodedPayload)),
     ) as Admin2FAPayload;
 
-    return payload.userId === expectedUserId && payload.expiresAt > Math.floor(Date.now() / 1000);
+    return payload.userId === expectedUserId && payload.binding === expectedBinding &&
+      Number.isFinite(payload.expiresAt) && payload.expiresAt > Math.floor(Date.now() / 1000);
   } catch {
     return false;
   }

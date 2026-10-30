@@ -1,3 +1,5 @@
+import { getVerifiedAdminSession } from "@/lib/admin-auth";
+import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import OrderStatusSelect from "@/components/admin/OrderStatusSelect";
 import OrderFilterSelect from "@/components/admin/OrderFilterSelect";
@@ -11,6 +13,7 @@ export default async function AdminOrdersPage({
 }: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
+  if (!await getVerifiedAdminSession()) redirect("/admin/2fa");
   const params = await searchParams;
   const statusFilter = params.status as string;
 

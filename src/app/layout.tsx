@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { connection } from "next/server";
 import { Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import clsx from "clsx";
@@ -37,6 +38,7 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  await connection();
   const settings = await getSettings();
 
   return (

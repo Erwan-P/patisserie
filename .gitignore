@@ -45,3 +45,13 @@ next-env.d.ts
 # local database snapshots and migration exports
 /dev.db
 /prisma/data_dump.json
+
+# Private credentials, audit workspaces and local security tools
+/.private/
+/.security-tools/
+*.bundle
+*.p12
+*.pfx
+*.key
+*.sqlite
+*.sqlite3

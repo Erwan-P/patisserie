@@ -4,6 +4,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { boundedText } from "@/lib/security";
 
 export async function updateProfile(name: string) {
   const session = await getServerSession(authOptions);
@@ -13,9 +14,10 @@ export async function updateProfile(name: string) {
   }
 
   try {
+    const safeName = boundedText(name, "Nom", 100);
     await prisma.user.update({
-      where: { email: session.user.email },
-      data: { name },
+      where: { id: session.user.id },
+      data: { name: safeName },
     });
     
     revalidatePath("/profil");
@@ -34,16 +36,16 @@ export async function deleteAccount() {
   }
 
   try {
-    const user = await prisma.user.findUnique({ where: { email: session.user.email } });
-    if (user) {
-      // Manual cascade since schema doesn't have onDelete: Cascade for Orders
-      await prisma.$transaction([
-        prisma.order.deleteMany({ where: { userId: user.id } }),
-        prisma.account.deleteMany({ where: { userId: user.id } }),
-        prisma.session.deleteMany({ where: { userId: user.id } }),
-        prisma.user.delete({ where: { id: user.id } })
-      ]);
-    }
+    await prisma.$transaction(async (tx) => {
+      const user = await tx.user.findUnique({ where: { id: session.user.id }, select: { id: true, role: true, email: true } });
+      if (!user) return;
+      if (user.role === "ADMIN") throw new Error("La suppression du compte administrateur est interdite.");
+      await tx.order.deleteMany({ where: { userId: user.id } });
+      await tx.account.deleteMany({ where: { userId: user.id } });
+      await tx.session.deleteMany({ where: { userId: user.id } });
+      if (user.email) await tx.verificationToken.deleteMany({ where: { identifier: user.email } });
+      await tx.user.delete({ where: { id: user.id } });
+    }, { isolationLevel: "Serializable" });
     // NextAuth will handle the session cookie deletion on client side after calling signOut
     return { success: true };
   } catch (error) {

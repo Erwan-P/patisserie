@@ -1,31 +1,38 @@
 import nodemailer from "nodemailer";
+import type { Prisma } from "@prisma/client";
+type ReceiptOrder = Prisma.OrderGetPayload<{ include: { items: { include: { product: true } }; user: true } }>;
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import { escapeHtml } from "@/lib/security";
 
 const transport = nodemailer.createTransport({
   host: process.env.SMTP_HOST || "smtp-relay.brevo.com",
   port: Number(process.env.SMTP_PORT) || 587,
+  requireTLS: true,
+  disableFileAccess: true,
+  disableUrlAccess: true,
   auth: {
     user: process.env.SMTP_USER,
     pass: process.env.SMTP_PASS,
   },
 });
 
-export async function sendReceiptEmail(order: any, pickupDate: string, pickupTime: string) {
+export async function sendReceiptEmail(order: ReceiptOrder, pickupDate: string, pickupTime: string) {
   if (!process.env.SMTP_USER) {
     console.warn("⚠️ SMTP_USER is not set. Receipt email is not sent.");
     return;
   }
+  if (!order.user.email) throw new Error("Adresse de confirmation manquante.");
 
   // Parsing manuel YYYY-MM-DD pour éviter tout décalage UTC
   const [year, month, day] = pickupDate.split('-').map(Number);
   const formattedDate = format(new Date(year, month - 1, day), "EEEE d MMMM yyyy", { locale: fr });
   
   let itemsHtml = "";
-  order.items.forEach((item: any) => {
+  order.items.forEach((item) => {
     itemsHtml += `
       <tr>
-        <td style="padding: 12px; border-bottom: 1px solid #E5E7EB;">${item.product.name}</td>
+        <td style="padding: 12px; border-bottom: 1px solid #E5E7EB;">${escapeHtml(item.product.name)}</td>
         <td style="padding: 12px; border-bottom: 1px solid #E5E7EB; text-align: center;">${item.quantity}</td>
         <td style="padding: 12px; border-bottom: 1px solid #E5E7EB; text-align: right;">${item.price.toFixed(2)} €</td>
         <td style="padding: 12px; border-bottom: 1px solid #E5E7EB; text-align: right; font-weight: bold;">${(item.price * item.quantity).toFixed(2)} €</td>

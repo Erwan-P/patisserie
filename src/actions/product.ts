@@ -1,10 +1,13 @@
 "use server";
 
+import type { Prisma } from "@prisma/client";
+import { validateProduct } from "@/lib/validation";
+import { publicRequestBudget } from "@/lib/request-security";
 import { prisma } from "@/lib/prisma";
 import { getVerifiedAdminSession } from "@/lib/admin-auth";
 import { removeUnreferencedStorageUrls } from "@/lib/storage-cleanup";
 
-export async function rebalanceSignatureOrders(tx: any, productId: string, targetOrder: number) {
+async function rebalanceSignatureOrders(tx: Prisma.TransactionClient, productId: string, targetOrder: number) {
   // Get all active signatures except the current one, ordered by their current signatureOrder
   const otherSignatures = await tx.product.findMany({
     where: {
@@ -15,7 +18,7 @@ export async function rebalanceSignatureOrders(tx: any, productId: string, targe
   });
 
   // Re-build the correct list of orders
-  let newOrderList = [];
+  const newOrderList = [];
   let inserted = false;
 
   let currentRank = 1;
@@ -46,6 +49,7 @@ export async function moveSignature(productId: string, direction: "UP" | "DOWN")
   const session = await getVerifiedAdminSession();
   if (!session || session.user?.role !== "ADMIN") return { error: "Non autorisé" };
 
+  if (!["UP", "DOWN"].includes(direction)) return { error: "Direction invalide" };
   try {
     await prisma.$transaction(async (tx) => {
       const product = await tx.product.findUnique({ where: { id: productId } });
@@ -81,6 +85,7 @@ export async function createProduct(data: {
   }
 
   try {
+    data = validateProduct(data, true);
     const product = await prisma.$transaction(async (tx) => {
       // Find main image
       const mainImage = data.media.find(m => m.type === "IMAGE")?.url || data.media[0]?.url || null;
@@ -90,7 +95,7 @@ export async function createProduct(data: {
           name: data.name,
           description: data.description,
           price: data.price,
-          category: data.category as any,
+          category: data.category,
           inventory: data.inventory,
           imageUrl: mainImage,
           isSignature: data.isSignature || false,
@@ -138,6 +143,7 @@ export async function updateProduct(
   }
 
   try {
+    data = validateProduct(data, false);
     const previousMedia = data.media
       ? await prisma.product.findUnique({
           where: { id },
@@ -146,11 +152,11 @@ export async function updateProduct(
       : null;
 
     const product = await prisma.$transaction(async (tx) => {
-      const updateData: any = {
+      const updateData: Prisma.ProductUpdateInput = {
         name: data.name,
         description: data.description,
         price: data.price,
-        category: data.category as any,
+        category: data.category,
         inventory: data.inventory,
         isSignature: data.isSignature || false,
         signatureOrder: data.isSignature ? undefined : null, // Clear order if not signature
@@ -245,6 +251,8 @@ export async function deleteProduct(id: string) {
 }
 
 export async function incrementProductView(productId: string) {
+  if (typeof productId !== "string" || productId.length > 100) return;
+  if (!await publicRequestBudget("views", productId, 100, 60000)) return;
   try {
     await prisma.product.update({
       where: { id: productId },

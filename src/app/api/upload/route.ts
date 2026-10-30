@@ -1,3 +1,6 @@
+import { isSameOriginRequest } from "@/lib/browser-request";
+import { publicRequestBudget } from "@/lib/request-security";
+import sharp from "sharp";
 import { NextResponse } from "next/server";
 import { getVerifiedAdminSession } from "@/lib/admin-auth";
 import { getPublicStorageUrl, getStorageClient, STORAGE_BUCKET } from "@/lib/storage";
@@ -12,11 +15,14 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Non autorisé" }, { status: 403 });
   }
 
+  if (!isSameOriginRequest(request)) return NextResponse.json({ error: "Origine non autorisée." }, { status: 403 });
+  if (Number(request.headers.get("content-length") || 0) > MAX_FILE_SIZE + 65536) return NextResponse.json({ error: "Fichier trop volumineux." }, { status: 413 });
+  if (!await publicRequestBudget("upload", session.user.id, 30, 60000)) return NextResponse.json({ error: "Trop de fichiers. Réessayez plus tard." }, { status: 429 });
   try {
     const formData = await request.formData();
-    const file = formData.get("file") as File;
+    const file = formData.get("file");
 
-    if (!file) {
+    if (!(file instanceof File)) {
       return NextResponse.json({ error: "Aucun fichier fourni." }, { status: 400 });
     }
 
@@ -51,11 +57,23 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Le contenu du fichier ne correspond pas à une image valide." }, { status: 400 });
     }
 
+    // Decode and re-encode instead of trusting only the file's first bytes.
+    // This also removes EXIF metadata, including possible GPS information.
+    let image: Buffer;
+    try {
+      image = await sharp(buffer, { animated: true, limitInputPixels: 24000000, failOn: "warning" }).rotate().toBuffer();
+    } catch {
+      return NextResponse.json({ error: "Image illisible ou trop grande." }, { status: 400 });
+    }
+    if (image.length > MAX_FILE_SIZE) {
+      return NextResponse.json({ error: "L'image ne doit pas dépasser 4 Mo." }, { status: 400 });
+    }
+
     const filename = `${crypto.randomUUID()}.${extensions[file.type]}`;
     const now = new Date();
     const objectPath = `products/${now.getUTCFullYear()}/${String(now.getUTCMonth() + 1).padStart(2, "0")}/${filename}`;
     const supabase = getStorageClient();
-    const { error } = await supabase.storage.from(STORAGE_BUCKET).upload(objectPath, buffer, {
+    const { error } = await supabase.storage.from(STORAGE_BUCKET).upload(objectPath, image, {
       contentType: file.type,
       cacheControl: "31536000",
       upsert: false,

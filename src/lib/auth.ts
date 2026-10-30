@@ -1,9 +1,12 @@
 import { NextAuthOptions } from "next-auth";
-import { PrismaAdapter } from "@auth/prisma-adapter";
+import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import { prisma } from "./prisma";
 import EmailProvider from "next-auth/providers/email";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
+import { randomUUID } from "node:crypto";
+import { credentialVersion, normalizeEmail, escapeHtml } from "@/lib/security";
+import { publicRequestBudget } from "@/lib/request-security";
 import nodemailer from "nodemailer";
 import type { Adapter } from "next-auth/adapters";
 
@@ -24,7 +27,7 @@ function html({ url }: { url: string }) {
       <p style="color: #666666; font-size: 16px; line-height: 1.5; margin-bottom: 30px;">
         Cliquez sur le bouton ci-dessous pour vous connecter en toute sécurité à votre espace client. Ce lien magique n'est valable qu'une seule fois.
       </p>
-      <a href="${url}" style="display: inline-block; background-color: #1A1A1A; color: #ffffff; text-decoration: none; padding: 16px 32px; border-radius: 30px; font-size: 16px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px;">
+      <a href="${escapeHtml(url)}" style="display: inline-block; background-color: #1A1A1A; color: #ffffff; text-decoration: none; padding: 16px 32px; border-radius: 30px; font-size: 16px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px;">
         Me connecter
       </a>
       <p style="color: #999999; font-size: 13px; margin-top: 30px;">
@@ -45,22 +48,27 @@ export const authOptions: NextAuthOptions = {
   providers: [
     EmailProvider({
       server: process.env.EMAIL_SERVER,
+      maxAge: 15 * 60,
+      normalizeIdentifier(identifier) {
+        const email = normalizeEmail(identifier);
+        if (!email) throw new Error("Adresse e-mail invalide.");
+        return email;
+      },
       from: process.env.EMAIL_FROM,
       sendVerificationRequest: async ({ identifier, url, provider }) => {
-        // En mode dev, on log toujours le lien au cas où l'envoi échoue
-        if (process.env.NODE_ENV !== "production") {
-          console.log(`\n=========================================\nMAGIC LINK FOR ${identifier}:\n${url}\n=========================================\n`);
-        }
-
-        // Si SMTP_USER n'est pas défini, on ne tente pas l'envoi
-        if (!process.env.SMTP_USER) {
-          console.warn("⚠️ SMTP_USER is not set. Magic link is only printed to console.");
+        const existing = await prisma.user.findUnique({ where: { email: identifier }, select: { role: true } });
+        if (existing?.role === "ADMIN") return;
+        if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
+          console.error("Le service e-mail est indisponible.");
           return;
         }
 
         const transport = nodemailer.createTransport({
           host: process.env.SMTP_HOST || "smtp-relay.brevo.com",
           port: Number(process.env.SMTP_PORT) || 587,
+          requireTLS: true,
+          disableFileAccess: true,
+          disableUrlAccess: true,
           auth: {
             user: process.env.SMTP_USER,
             pass: process.env.SMTP_PASS,
@@ -75,13 +83,14 @@ export const authOptions: NextAuthOptions = {
             text: text({ url }),
             html: html({ url }),
           });
-          const failed = result.rejected.concat(result.pending).filter(Boolean);
+          const failed = result.rejected.concat(result.pending ?? []).filter(Boolean);
           if (failed.length) {
             throw new Error(`Email(s) (${failed.join(", ")}) could not be sent`);
           }
         } catch (error) {
-          console.error("SEND_VERIFICATION_EMAIL_ERROR", error);
-          throw new Error("Erreur d'envoi de l'email");
+          console.error("SEND_VERIFICATION_EMAIL_ERROR", error instanceof Error ? error.name : "EmailError");
+          // Keep the public response identical, including for protected admin
+          // addresses. No link, address or mail server response is logged.
         }
       },
     }),
@@ -92,57 +101,14 @@ export const authOptions: NextAuthOptions = {
         password: { label: "Mot de passe", type: "password" }
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) {
-          return null;
-        }
-
-        const normalizedEmail = credentials.email.trim().toLowerCase();
-        const rateLimitIdentifier = `login:${normalizedEmail}`;
-        let rateLimit = await prisma.rateLimit.upsert({
-          where: { identifier: rateLimitIdentifier },
-          update: {},
-          create: { identifier: rateLimitIdentifier, attempts: 0 },
-        });
-        const lockDuration = 15 * 60 * 1000;
-
-        if (rateLimit.lockedAt) {
-          const lockExpired = Date.now() - rateLimit.lockedAt.getTime() >= lockDuration;
-          if (!lockExpired) return null;
-          rateLimit = await prisma.rateLimit.update({
-            where: { identifier: rateLimitIdentifier },
-            data: { attempts: 0, lockedAt: null },
-          });
-        }
-
-        const user = await prisma.user.findUnique({
-          where: { email: normalizedEmail }
-        });
-
-        // Only allow users with a password to login via credentials (which are our admins)
-        if (!user || !user.password) {
-          const attempts = rateLimit.attempts + 1;
-          await prisma.rateLimit.update({
-            where: { identifier: rateLimitIdentifier },
-            data: { attempts, lockedAt: attempts >= 5 ? new Date() : null },
-          });
-          return null;
-        }
-
-        const isPasswordValid = await bcrypt.compare(credentials.password, user.password);
-
-        if (!isPasswordValid) {
-          const attempts = rateLimit.attempts + 1;
-          await prisma.rateLimit.update({
-            where: { identifier: rateLimitIdentifier },
-            data: { attempts, lockedAt: attempts >= 5 ? new Date() : null },
-          });
-          return null;
-        }
-
-        await prisma.rateLimit.update({
-          where: { identifier: rateLimitIdentifier },
-          data: { attempts: 0, lockedAt: null },
-        });
+        const normalizedEmail = normalizeEmail(credentials?.email);
+        if (!normalizedEmail || typeof credentials?.password !== "string" ||
+            !credentials.password || Buffer.byteLength(credentials.password, "utf8") > 72) return null;
+        if (!await publicRequestBudget("login", normalizedEmail, 5, 15 * 60 * 1000)) return null;
+        const user = await prisma.user.findUnique({ where: { email: normalizedEmail } });
+        // Never let a client select or obtain a privileged role.
+        if (!user || user.role !== "ADMIN" || !user.password) return null;
+        if (!await bcrypt.compare(credentials.password, user.password)) return null;
 
         return {
           id: user.id,
@@ -155,19 +121,47 @@ export const authOptions: NextAuthOptions = {
   ],
   session: {
     strategy: "jwt",
+    maxAge: 8 * 60 * 60,
   },
   callbacks: {
+    async signIn({ user, account, email }) {
+      if (account?.provider !== "email") return true;
+      const address = normalizeEmail(user.email);
+      if (!address) return false;
+      if (email?.verificationRequest) {
+        if (!await publicRequestBudget("email", address, 3, 15 * 60 * 1000)) {
+          return new URL("/api/auth/verify-request?provider=email&type=email", process.env.NEXTAUTH_URL || "http://localhost:3000").toString();
+        }
+      }
+      const existing = await prisma.user.findUnique({ where: { email: address }, select: { role: true } });
+      // An admin may not bypass their password by using the public e-mail provider.
+      if (existing?.role === "ADMIN" && !email?.verificationRequest) return false;
+      return true;
+    },
     async session({ session, token }) {
-      if (token && session.user) {
+      if (session.user) {
         session.user.id = token.id as string;
         session.user.role = token.role as string;
+        session.user.securityVersion = token.securityVersion as string;
+        session.user.sessionId = token.sessionId as string;
       }
       return session;
     },
     async jwt({ token, user }) {
+      const id = user?.id || token.id;
+      if (typeof id !== "string") throw new Error("Session révoquée.");
+      const current = await prisma.user.findUnique({
+        where: { id }, select: { id: true, role: true, password: true, twoFactorHash: true },
+      });
+      if (!current) throw new Error("Session révoquée.");
+      const version = credentialVersion(current);
       if (user) {
-        token.id = user.id;
-        token.role = user.role || "USER";
+        token.id = current.id;
+        token.role = current.role;
+        token.securityVersion = version;
+        token.sessionId = randomUUID();
+      } else if (token.securityVersion !== version || !token.sessionId) {
+        throw new Error("Session révoquée.");
       }
       return token;
     },

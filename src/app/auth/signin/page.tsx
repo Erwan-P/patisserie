@@ -3,7 +3,7 @@
 import { signIn, useSession } from "next-auth/react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { checkIsAdmin, reset2FA } from "@/actions/auth";
+import { reset2FA } from "@/actions/auth";
 
 import { useEffect } from "react";
 
@@ -12,8 +12,7 @@ export default function SignIn() {
   const { status } = useSession();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [step, setStep] = useState<1 | 2>(1);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [adminMode, setAdminMode] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -32,28 +31,14 @@ export default function SignIn() {
     setLoading(true);
     setError("");
 
-    if (step === 1) {
-      // Check if email belongs to admin
-      const adminCheck = await checkIsAdmin(email);
-      if (adminCheck) {
-        setIsAdmin(true);
-        setStep(2);
-        setLoading(false);
-      } else {
-        // Normal user -> Send magic link directly
-        const res = await signIn("email", {
-          redirect: false,
-          email,
-        });
-
-        if (res?.error) {
-          setError("Erreur lors de l'envoi du lien magique.");
-        } else {
-          setError("Lien magique envoyé ! Vérifiez votre boîte mail.");
-        }
-        setLoading(false);
-      }
-    } else if (step === 2 && isAdmin) {
+    if (!adminMode) {
+      try {
+        await signIn("email", { redirect: false, email });
+        setError("Si cette adresse permet la connexion, un lien vous sera envoyé. Vérifiez votre boîte mail.");
+      } catch {
+        setError("Impossible de demander un lien pour le moment. Réessayez plus tard.");
+      } finally { setLoading(false); }
+    } else {
       // Step 2 for Admin -> Force reset 2FA before login
       await reset2FA();
 
@@ -80,7 +65,7 @@ export default function SignIn() {
           Connexion
         </h1>
         <p className="text-muted-foreground text-center mb-8 text-sm">
-          {step === 1 ? "Entrez votre email pour continuer." : "Entrez votre mot de passe."}
+          {adminMode ? "Connectez-vous à votre espace de gestion." : "Entrez votre email pour continuer."}
         </p>
 
         {error && (
@@ -90,12 +75,14 @@ export default function SignIn() {
         )}
 
         <form onSubmit={handleNextStep} className="space-y-6">
-          {step === 1 && (
+          {(
             <div>
               <label className="block text-sm font-semibold mb-2">Adresse Email</label>
               <input
                 type="email"
                 required
+                autoComplete="email"
+                maxLength={254}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full px-4 py-3 rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
@@ -104,12 +91,13 @@ export default function SignIn() {
             </div>
           )}
 
-          {step === 2 && (
+          {adminMode && (
             <div>
               <label className="block text-sm font-semibold mb-2">Mot de passe</label>
               <input
                 type="password"
                 required
+                autoComplete="current-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full px-4 py-3 rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
@@ -126,6 +114,9 @@ export default function SignIn() {
             {loading ? "Chargement..." : "Continuer"}
           </button>
         </form>
+        <button type="button" disabled={loading} onClick={() => { setAdminMode(!adminMode); setPassword(""); setError(""); }} className="w-full mt-6 text-sm text-muted-foreground hover:text-foreground">
+          {adminMode ? "Connexion client" : "Accès administrateur"}
+        </button>
       </div>
     </div>
   );

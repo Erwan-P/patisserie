@@ -1,8 +1,11 @@
+import { getVerifiedAdminSession } from "@/lib/admin-auth";
+import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import EditProductForm from "./EditProductForm";
 
 export default async function EditProductPage({ params }: { params: Promise<{ id: string }> }) {
+  if (!await getVerifiedAdminSession()) redirect("/admin/2fa");
   const { id } = await params;
   
   const product = await prisma.product.findUnique({

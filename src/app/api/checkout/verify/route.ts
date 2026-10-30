@@ -1,3 +1,5 @@
+import { isSameOriginRequest } from "@/lib/browser-request";
+import { publicRequestBudget } from "@/lib/request-security";
 import { NextResponse } from "next/server";
 import { sendReceiptEmail } from "@/lib/email";
 import Stripe from "stripe";
@@ -14,9 +16,13 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Non autorisé." }, { status: 401 });
     }
 
+    if (!isSameOriginRequest(req)) return NextResponse.json({ error: "Origine non autorisée." }, { status: 403 });
+    if (!req.headers.get("content-type")?.startsWith("application/json")) return NextResponse.json({ error: "Format non autorisé." }, { status: 415 });
+    if (Number(req.headers.get("content-length") || 0) > 32768) return NextResponse.json({ error: "Requête trop volumineuse." }, { status: 413 });
+    if (!await publicRequestBudget("verify", authSession.user.id, 20, 60000)) return NextResponse.json({ error: "Trop de requêtes. Réessayez plus tard." }, { status: 429 });
     const { session_id } = await req.json();
 
-    if (!session_id) {
+    if (typeof session_id !== "string" || !/^cs_[A-Za-z0-9_]{10,250}$/.test(session_id)) {
       return NextResponse.json({ error: "Session ID manquant." }, { status: 400 });
     }
 

@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { getVerifiedAdminSession } from "@/lib/admin-auth";
+import { validateSettings } from "@/lib/validation";
 
 export async function getSettings() {
   let settings = await prisma.storeSettings.findUnique({
@@ -49,12 +50,13 @@ export async function updateSettings(data: {
     throw new Error("Non autorisé.");
   }
 
+  const safeData = validateSettings(data);
   const settings = await prisma.storeSettings.upsert({
     where: { id: "MAIN" },
-    update: data,
+    update: safeData,
     create: {
       id: "MAIN",
-      ...data
+      ...safeData
     }
   });
 

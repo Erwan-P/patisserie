@@ -1,3 +1,5 @@
+import { getVerifiedAdminSession } from "@/lib/admin-auth";
+import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { Plus, Search, Tag, Eye, ShoppingBag, Euro, AlertCircle, Sparkles } from "lucide-react";
@@ -8,6 +10,7 @@ import { getSiteAssetUrl } from "@/lib/storage";
 export const dynamic = "force-dynamic";
 
 export default async function AdminProductsPage() {
+  if (!await getVerifiedAdminSession()) redirect("/admin/2fa");
   const placeholderUrl = getSiteAssetUrl("placeholder_pastry.jpg");
   const products = await prisma.product.findMany({
     orderBy: { createdAt: 'desc' },
@@ -40,7 +43,7 @@ export default async function AdminProductsPage() {
       <div className="bg-background rounded-2xl border border-border overflow-hidden shadow-sm">
         <div className="p-6 border-b border-border flex items-center gap-3 bg-primary/5">
           <Sparkles className="w-5 h-5 text-primary" />
-          <h2 className="font-bold uppercase tracking-widest text-primary">Produits à la Une (Page d'accueil)</h2>
+          <h2 className="font-bold uppercase tracking-widest text-primary">Produits à la Une (Page d&apos;accueil)</h2>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm text-left">
@@ -58,7 +61,7 @@ export default async function AdminProductsPage() {
               {signatureProducts.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="px-6 py-8 text-center text-muted-foreground">
-                    Aucun produit sélectionné pour la page d'accueil.
+                    Aucun produit sélectionné pour la page d&apos;accueil.
                   </td>
                 </tr>
               ) : signatureProducts.map((product, index) => {
