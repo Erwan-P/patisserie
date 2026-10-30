@@ -9,7 +9,7 @@ jobs:
       DATABASE_URL: postgresql://127.0.0.1:5432/security_test
       DIRECT_URL: postgresql://127.0.0.1:5432/security_test
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
       - uses: actions/setup-node@v4
