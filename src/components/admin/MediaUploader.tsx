@@ -98,7 +98,8 @@ export default function MediaUploader({
   return (
     <div className="space-y-4">
       {/* ProgressBar (Simplified to text only) */}
-      <div className="flex justify-end text-xs font-bold text-muted-foreground mb-2">
+      <div className="flex flex-wrap justify-between gap-2 text-xs font-bold text-muted-foreground mb-2">
+        <span>JPG, PNG, WebP ou GIF uniquement. 4 Mo maximum par image.</span>
         <span className={totalSize > MAX_TOTAL_SIZE ? "text-destructive" : ""}>
           Espace utilisé : {(totalSize / 1024 / 1024).toFixed(1)} Mo / 20 Mo
         </span>
@@ -152,7 +153,7 @@ export default function MediaUploader({
           className="aspect-square rounded-xl border-2 border-dashed border-border hover:bg-muted/50 transition-colors flex flex-col items-center justify-center text-muted-foreground hover:text-foreground cursor-pointer"
         >
           <Upload className="w-6 h-6 mb-2 opacity-50" />
-          <span className="text-xs font-bold uppercase tracking-widest text-center px-4">Ajouter un média</span>
+          <span className="text-xs font-bold uppercase tracking-widest text-center px-4">Ajouter une image</span>
         </button>
       </div>
 

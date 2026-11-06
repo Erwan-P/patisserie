@@ -4,7 +4,7 @@
 
 Les données du profil sont sélectionnées explicitement dans `src/lib/profile.ts`. Aucun hash de mot de passe ou de code de sécurité ne doit être transmis à un composant client.
 
-La connexion client utilise un lien e-mail de 15 minutes. L'accès administrateur est choisi explicitement sur l'écran de connexion et nécessite un mot de passe puis le code de sécurité. Le fournisseur e-mail refuse la validation d'un lien pour un compte administrateur, y compris par appel direct à l'API.
+La connexion client utilise un lien e-mail de 15 minutes. À la saisie de l'adresse, le serveur sélectionne le mode de connexion. Une adresse administrateur déclenche la demande du mot de passe, puis le code de sécurité reste obligatoire. Cette différence de parcours permet de confirmer une adresse administrateur candidate. La vérification est limitée par adresse e-mail, par IP et globalement. Le fournisseur e-mail refuse la validation d'un lien pour un compte administrateur, y compris par appel direct à l'API.
 
 Les JWT contiennent une empreinte HMAC des justificatifs actuels et un identifiant de connexion aléatoire. L'empreinte est vérifiée en base à chaque lecture de session. La modification du mot de passe, du code ou du rôle, ainsi que la suppression du compte, invalident les anciens JWT. Le cookie de code de sécurité est signé, limité à 30 minutes, lié au compte, aux justificatifs et à la connexion concernée.
 

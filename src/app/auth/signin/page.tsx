@@ -1,11 +1,9 @@
 "use client";
 
 import { signIn, useSession } from "next-auth/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { reset2FA } from "@/actions/auth";
-
-import { useEffect } from "react";
+import { getSignInMethod, reset2FA } from "@/actions/auth";
 
 export default function SignIn() {
   const router = useRouter();
@@ -18,9 +16,9 @@ export default function SignIn() {
 
   useEffect(() => {
     if (status === "authenticated") {
-      router.push("/profil");
+      router.push(adminMode ? "/admin" : "/profil");
     }
-  }, [status, router]);
+  }, [status, adminMode, router]);
 
   if (status === "authenticated") {
     return null;
@@ -31,30 +29,37 @@ export default function SignIn() {
     setLoading(true);
     setError("");
 
-    if (!adminMode) {
-      try {
+    try {
+      if (!adminMode) {
+        const method = await getSignInMethod(email);
+        if (method === "invalid") {
+          setError("Saisissez une adresse e-mail valide.");
+          return;
+        }
+        if (method === "limited") {
+          setError("Trop de tentatives. Réessayez dans quelques minutes.");
+          return;
+        }
+        if (method === "password") {
+          setAdminMode(true);
+          return;
+        }
         await signIn("email", { redirect: false, email });
         setError("Si cette adresse permet la connexion, un lien vous sera envoyé. Vérifiez votre boîte mail.");
-      } catch {
-        setError("Impossible de demander un lien pour le moment. Réessayez plus tard.");
-      } finally { setLoading(false); }
-    } else {
-      // Step 2 for Admin -> Force reset 2FA before login
+        return;
+      }
+
       await reset2FA();
-
-      // Check password
-      const res = await signIn("credentials", {
-        redirect: false,
-        email,
-        password,
-      });
-
-      if (res?.error) {
+      const res = await signIn("credentials", { redirect: false, email, password });
+      if (!res?.ok || res.error) {
         setError("Identifiants incorrects.");
-        setLoading(false);
       } else {
         router.push("/admin");
       }
+    } catch {
+      setError("La connexion est momentanément indisponible. Réessayez plus tard.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -84,7 +89,13 @@ export default function SignIn() {
                 autoComplete="email"
                 maxLength={254}
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                disabled={loading}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  setAdminMode(false);
+                  setPassword("");
+                  setError("");
+                }}
                 className="w-full px-4 py-3 rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
                 placeholder="vous@exemple.com"
               />
@@ -99,6 +110,7 @@ export default function SignIn() {
                 required
                 autoComplete="current-password"
                 value={password}
+                disabled={loading}
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full px-4 py-3 rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
                 placeholder="••••••••"
@@ -114,9 +126,6 @@ export default function SignIn() {
             {loading ? "Chargement..." : "Continuer"}
           </button>
         </form>
-        <button type="button" disabled={loading} onClick={() => { setAdminMode(!adminMode); setPassword(""); setError(""); }} className="w-full mt-6 text-sm text-muted-foreground hover:text-foreground">
-          {adminMode ? "Connexion client" : "Accès administrateur"}
-        </button>
       </div>
     </div>
   );
